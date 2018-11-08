@@ -1,0 +1,938 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="spark,ml，scala," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="内容简介最近，笔者在使用spark的ml包构建模型时，发现资料较少，而且spark中examples包下的代码也过于片面，所使用的数据集都是libsvm格式。然而现实中，数据集一般以csv格式居多。因此，在本文中使用ml包以及csv格式的数据集进行初步的使用介绍。">
+<meta name="keywords" content="spark,ml，scala">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spark之ml初步使用">
+<meta property="og:url" content="http://yoursite.com/2017/11/09/spark之ml初步使用/index.html">
+<meta property="og:site_name" content="FaceHo">
+<meta property="og:description" content="内容简介最近，笔者在使用spark的ml包构建模型时，发现资料较少，而且spark中examples包下的代码也过于片面，所使用的数据集都是libsvm格式。然而现实中，数据集一般以csv格式居多。因此，在本文中使用ml包以及csv格式的数据集进行初步的使用介绍。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2017-11-10T07:17:04.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spark之ml初步使用">
+<meta name="twitter:description" content="内容简介最近，笔者在使用spark的ml包构建模型时，发现资料较少，而且spark中examples包下的代码也过于片面，所使用的数据集都是libsvm格式。然而现实中，数据集一般以csv格式居多。因此，在本文中使用ml包以及csv格式的数据集进行初步的使用介绍。">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/11/09/spark之ml初步使用/"/>
+
+
+
+
+
+  <title>spark之ml初步使用 | FaceHo</title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-90667458-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">FaceHo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">嗯哼～</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/11/09/spark之ml初步使用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="FaceHo">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/user2.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="FaceHo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spark之ml初步使用</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-11-09T15:00:54+08:00">
+                2017-11-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2017/11/09/spark之ml初步使用/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="内容简介"><a href="#内容简介" class="headerlink" title="内容简介"></a>内容简介</h3><p>最近，笔者在使用spark的ml包构建模型时，发现资料较少，而且spark中examples包下的代码也过于片面，所使用的数据集都是libsvm格式。然而现实中，数据集一般以csv格式居多。因此，在本文中使用ml包以及csv格式的数据集进行初步的使用介绍。</p>
+<a id="more"></a>
+<h3 id="spark的安装和部署"><a href="#spark的安装和部署" class="headerlink" title="spark的安装和部署"></a>spark的安装和部署</h3><p>spark的安装和部署可以参见官网。</p>
+<h3 id="使用介绍"><a href="#使用介绍" class="headerlink" title="使用介绍"></a>使用介绍</h3><p>这里我们进行 spark 使用的详细的介绍。</p>
+<ol>
+<li><p>初始化spark，可以设置spark程序的名称。如果通过 webUI 的方式访问spark，可以在 Name 列看到名称。</p>
+<pre><code>val spark = SparkSession
+    .builder()
+      .appName(&quot;Model&quot;)
+      .getOrCreate()
+</code></pre></li>
+<li><p>读取csv格式的数据集。inferSchema 选项表示允许spark自动推断数据类型。假设train.csv有204列，其中最后一列是标签。</p>
+<pre><code>val data = spark
+    .read
+    .format(&quot;com.databricks.spark.csv&quot;)
+    .option(&quot;inferSchema&quot;, &quot;true&quot;)
+    .load(&quot;train.csv&quot;)
+</code></pre></li>
+<li><p>csv文件读取到的数据有多个特征，需要将train.csv中的203个特征整合到一个特征中。因为train.csv中没有列名，所以spark会自动将列命名为”_c0”，”_c1”，…，”_cn”。</p>
+<pre><code>val cloumns = Range(0,204)
+    .map(x =&gt; &quot;_c&quot; + x)
+    .toArray
+val vectorAssembler = new VectorAssembler()
+    .setInputCols(cloumns)
+    .setOutputCol(&quot;features&quot;)
+val data2 = vectorAssembler
+    .transform(data)
+</code></pre></li>
+<li><p>分割数据集为训练集和测试集。</p>
+<pre><code>val Array(trainData, testData) = data2.randomSplit(Array(0.7, 0.3))
+</code></pre></li>
+<li><p>定义模型</p>
+<p>5-1. 逻辑回归模型。当然也有别的参数可供配置。</p>
+<pre><code>val lor = new LogisticRegression()
+   .setFeaturesCol(&quot;features&quot;)   //设置想要学习的特征
+   .setLabelCol(&quot;_c204&quot;)         //设置数据的标签
+   .setRegParam(0.0)             //设置正则化参数
+   .setElasticNetParam(0.0)      //设置混合参数
+   .setMaxIter(100)              //设置迭代次数
+   .setTol(1E-6)                 //设置容错
+   .setFitIntercept(true)        //设置是否适应截距
+</code></pre><p>5-2. 随机森林模型。当然也有别的参数可供配置。</p>
+<pre><code>val randomForest = new RandomForestClassifier()
+   .setLabelCol(&quot;_c204&quot;)
+ .setFeaturesCol(&quot;features&quot;)
+   .setNumTrees(10)
+</code></pre><p>5-3. GBDT模型</p>
+<pre><code>val gbt = new GBTClassifier()
+   .setFeaturesCol(&quot;features&quot;)
+   .setLabelCol(&quot;_c204&quot;)
+</code></pre></li>
+<li><p>定义数据处理的流水。这里用了GBDT模型。</p>
+<pre><code>val pipline = new Pipeline().setStages(Array(gbt)) 
+</code></pre></li>
+<li><p>训练模型。</p>
+<pre><code>val model = pipline.fit(trainData)
+</code></pre></li>
+<li><p>用测试集测试模型。会有一列列名为 prediction 的输出，</p>
+<pre><code>val prediction = model.transform(testData)
+</code></pre></li>
+<li><p>评估测试结果。</p>
+<pre><code>val evaluator = new MulticlassClassificationEvaluator()
+      .setLabelCol(&quot;_c204&quot;)
+      .setPredictionCol(&quot;prediction&quot;)
+      .setMetricName(&quot;accuracy&quot;)
+
+val accuracy = evaluator.evaluate(prediction)
+</code></pre></li>
+<li><p>输出结果。</p>
+<pre><code>println(&quot;accuracy: &quot; + accuracy)
+</code></pre></li>
+<li><p>关闭spark。</p>
+<pre><code>spark.stop()
+</code></pre></li>
+</ol>
+<h3 id="完整代码"><a href="#完整代码" class="headerlink" title="完整代码"></a>完整代码</h3><p>以随机森林为例。</p>
+<pre><code>import org.apache.spark.ml.{Pipeline}
+import org.apache.spark.ml.classification.{RandomForestClassifier}
+import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.sql.SparkSession
+
+object RandomForestModelTest {
+      def main(args: Array[String]): Unit = {
+        val spark = SparkSession.builder().appName(&quot;RandomForestModel&quot;).getOrCreate()
+
+        val data = spark.read.format(&quot;com.databricks.spark.csv&quot;).option(&quot;inferSchema&quot;, &quot;true&quot;).load(&quot;/sch/data/train.csv&quot;)
+
+        val columns = Range(0, 204).map(x =&gt; &quot;_c&quot; + x).toArray
+        val vectorAssembler = new VectorAssembler().setInputCols(columns).setOutputCol(&quot;features&quot;)
+        val data2 = vectorAssembler.transform(data)
+
+        val Array(trainData, testData) = data2.randomSplit(Array(0.7, 0.3))
+
+        val randomForest = new RandomForestClassifier()
+             .setLabelCol(&quot;_c204&quot;)
+              .setFeaturesCol(&quot;features&quot;)
+              .setNumTrees(10)
+
+        val pipeline = new Pipeline().setStages(Array(randomForest))
+
+        val model = pipeline.fit(trainData)
+
+        val predictions = model.transform(testData)
+
+        val evaluator = new MulticlassClassificationEvaluator()
+              .setLabelCol(&quot;_c204&quot;)
+              .setPredictionCol(&quot;prediction&quot;)
+              .setMetricName(&quot;accuracy&quot;)
+
+        val accuracy = evaluator.evaluate(predictions)
+
+        println(&quot;accuracy: &quot; + accuracy)
+
+        spark.stop()
+      }
+}
+</code></pre><h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ol>
+<li><a href="http://spark.apache.org/docs/latest/ml-guide.html" target="_blank" rel="external">http://spark.apache.org/docs/latest/ml-guide.html</a></li>
+<li><a href="http://www.mamicode.com/info-detail-1683740.html" target="_blank" rel="external">http://www.mamicode.com/info-detail-1683740.html</a></li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/spark/" rel="tag"># spark</a>
+          
+            <a href="/tags/ml，scala/" rel="tag"># ml，scala</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/10/16/solidity-合约状态变量存储规则/" rel="next" title="solidity 合约状态变量存储规则分析">
+                <i class="fa fa-chevron-left"></i> solidity 合约状态变量存储规则分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/11/27/maven介绍/" rel="prev" title="Maven 介绍">
+                Maven 介绍 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/user2.png"
+               alt="FaceHo" />
+          <p class="site-author-name" itemprop="name">FaceHo</p>
+           
+              <p class="site-description motion-element" itemprop="description">stay hungry, stay foolish</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/shichaohao" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://www.linkedin.com/in/chaohao-shi-285703106/" target="_blank" title="linkedin">
+                  
+                    <i class="fa fa-fw fa-linkedin"></i>
+                  
+                  linkedin
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/shi-zhao-hao" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              Links
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.bo-song.com" title="宋博" target="_blank">宋博</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.chenquan.me" title="陈权" target="_blank">陈权</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#内容简介"><span class="nav-number">1.</span> <span class="nav-text">内容简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#spark的安装和部署"><span class="nav-number">2.</span> <span class="nav-text">spark的安装和部署</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用介绍"><span class="nav-number">3.</span> <span class="nav-text">使用介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#完整代码"><span class="nav-number">4.</span> <span class="nav-text">完整代码</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">FaceHo</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "4419bf822dca4a6ab0d1ed9b2127f410",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

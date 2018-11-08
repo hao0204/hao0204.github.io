@@ -1,0 +1,1356 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="Go,区块链," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="内容简介目前在较火的区块链技术中，使用 solidity 语言编写智能合约较为普遍，本文主要讲述智能合约中状态变量的存储规则。">
+<meta name="keywords" content="Go,区块链">
+<meta property="og:type" content="article">
+<meta property="og:title" content="solidity 合约状态变量存储规则分析">
+<meta property="og:url" content="http://yoursite.com/2017/10/16/solidity-合约状态变量存储规则/index.html">
+<meta property="og:site_name" content="FaceHo">
+<meta property="og:description" content="内容简介目前在较火的区块链技术中，使用 solidity 语言编写智能合约较为普遍，本文主要讲述智能合约中状态变量的存储规则。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/images/solidity-合约状态变量存储规则/storage-1.jpg">
+<meta property="og:updated_time" content="2017-11-06T03:36:50.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="solidity 合约状态变量存储规则分析">
+<meta name="twitter:description" content="内容简介目前在较火的区块链技术中，使用 solidity 语言编写智能合约较为普遍，本文主要讲述智能合约中状态变量的存储规则。">
+<meta name="twitter:image" content="http://yoursite.com/images/solidity-合约状态变量存储规则/storage-1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/10/16/solidity-合约状态变量存储规则/"/>
+
+
+
+
+
+  <title>solidity 合约状态变量存储规则分析 | FaceHo</title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-90667458-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">FaceHo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">嗯哼～</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/10/16/solidity-合约状态变量存储规则/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="FaceHo">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/user2.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="FaceHo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">solidity 合约状态变量存储规则分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-10-16T18:15:06+08:00">
+                2017-10-16
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2017/10/16/solidity-合约状态变量存储规则/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="内容简介"><a href="#内容简介" class="headerlink" title="内容简介"></a>内容简介</h3><p>目前在较火的区块链技术中，使用 <strong>solidity</strong> 语言编写智能合约较为普遍，本文主要讲述智能合约中状态变量的存储规则。</p>
+<a id="more"></a>
+<h3 id="状态变量的定义与类别"><a href="#状态变量的定义与类别" class="headerlink" title="状态变量的定义与类别"></a>状态变量的定义与类别</h3><h4 id="状态变量是什么"><a href="#状态变量是什么" class="headerlink" title="状态变量是什么"></a>状态变量是什么</h4><p>状态变量是永久存储在合约存储空间中的值。如下代码所示，类型为uint、名称为num的变量就是一个状态变量。所以状态变量有点像Java中的类成员变量。</p>
+<pre><code>pragma solidity ^0.4.0;
+
+contract SimpleStorage {
+       uint num; // State variable
+    // ...
+}
+</code></pre><h4 id="状态变量的类型"><a href="#状态变量的类型" class="headerlink" title="状态变量的类型"></a>状态变量的类型</h4><p><strong>solidity</strong> 是一门静态类型的语言，这意味着在编译期间，每个变量的类型（不管是状态变量还是局部变量）都是确定的，至少是可以推断出来的。在这里，主要讲述状态变量，局部变量与状态变量类似，不再阐述。</p>
+<p>状态变量的类型分为静态类型和动态类型。</p>
+<h5 id="动态类型"><a href="#动态类型" class="headerlink" title="动态类型"></a>动态类型</h5><p>动态类型包括 <strong>mapping</strong> 类型和 <strong>动态数组</strong> 类型。它们在存储空间中所占据的位置需要通过计算才可获知。</p>
+<p><strong>mapping</strong> 类型可以声明为 <strong>mapping(_KeyType =&gt; _ValueType)</strong>。<strong>_KeyType</strong> 可以是除了 <strong>mapping</strong>，<strong>动态数组</strong>，<strong>合约</strong>，<strong>枚举类型</strong>，<strong>结构类型</strong> 之外的所有类型。 <strong>_ValueType</strong> 可以是任何类型。<strong>mapping</strong> 类型可以看作是一张哈希表。</p>
+<p><strong>动态数组</strong> 类型可以声明为 <strong>T[]</strong>，<strong>T</strong> 是类型。</p>
+<p>如下所示，num是 <strong>动态数组</strong> 类型，people是 <strong>mapping</strong> 类型。</p>
+<pre><code>contract Demo {
+       uint[] num;                       // State variable
+       mapping(bytes32 =&gt; uint) people;  // State variable
+    // ...
+}
+</code></pre><h5 id="静态类型"><a href="#静态类型" class="headerlink" title="静态类型"></a>静态类型</h5><p>静态类型是除了动态类型之外所有的类型。包括：</p>
+<blockquote>
+<p>布尔类型: bool。</p>
+<p>整数类型: 包括有符号数(int8, int16, …, int256)和无符号数(uint8, uint16, …, uint256)。int 和 uint 分别等于 int256 和 uint256。</p>
+<p>地址类型: address。</p>
+<p>固定大小的字节数组: bytes1, bytes2, …, bytes32。 byte 等于 bytes1。</p>
+<p>动态大小的字节数组（字符串）: bytes 和 string。</p>
+<p>枚举类型： enum。</p>
+<p>静态数组：T[k]。</p>
+<p>结构体类型：struct。</p>
+</blockquote>
+<p>其中 <strong>静态数组</strong> 和 <strong>结构体类型</strong> 是否是静态，还需要看数组的类型(T)或者结构体定义才能判断。这里先归为静态类型。例子如下所示。</p>
+<pre><code>contract Demo {
+       bool isEmpty;           // 变量类型为布尔类型，变量名称为isEmpty。
+       uint num;               // 变量类型为整数类型，变量名称为num。
+       address accountAddress; // 变量类型为地址类型，变量名称为accountAddress。
+       bytes32 id;             // 变量类型为32个字节大小的数组，变量名称为id。
+       string str;             // 变量类型为字符串类型，变量名称为str。
+       uint8[] money;          // 变量类型为uint8类型的动态数组，变量名称为money。
+       struct People {         // 结构体People的定义。
+        bytes32 name;
+        int height;
+        int weight; 
+    }
+    People people;          // 变量类型为结构体类型，变量名称为people。
+    enum AccountType{Customer, Merchant}  // 枚举类型定义。
+    AccountType accountType;  // 变量类型为枚举类型，变量名称为accountType。
+    // ...
+}
+</code></pre><h3 id="状态变量的存储规则"><a href="#状态变量的存储规则" class="headerlink" title="状态变量的存储规则"></a>状态变量的存储规则</h3><p>在了解了什么是状态变量以及状态变量的类别后，我们进入本文的主题，状态变量的存储规则讲解。</p>
+<h4 id="存储空间"><a href="#存储空间" class="headerlink" title="存储空间"></a>存储空间</h4><p>首先，我们需要了解整个存储空间是什么样子。如下图所示，存储空间可以理解为由许多个槽空间组成，每个槽空间都是键值对，键表示槽的地址，也就是图中绿色部分，表示状态变量的地址，值表示该槽所存储的内容，也就是图中黄色部分，表示状态变量的值。</p>
+<p>存储空间的地址总是从0开始，每个槽的键、值都是256位，换算成十六进制，也就是32长度。不同类型的状态变量所占据的槽的位数不同，详情见下文。</p>
+<p>少于32个字节的连续多个状态变量将会压缩进一个槽中，也就是存在多个状态变量存储在一个槽中。压缩时遵守如下规则：</p>
+<blockquote>
+<ol>
+<li>每个状态变量存储时总是从低序开始分配（也就是从右到左开始分配256位）</li>
+<li>每个状态变量只分配该状态变量需要的位数。</li>
+<li>如果一个槽中剩余可分配的位数不满足该状态变量的需求，那么分配新的槽（槽地址+1）给该状态变量。</li>
+<li>结构体类型和数组类型的状态变量总是分配新槽并且占据整个槽空间，但是结构体或者数组内部的存储仍然遵守压缩的规则。</li>
+</ol>
+</blockquote>
+<p><img src="/images/solidity-合约状态变量存储规则/storage-1.jpg" alt="Storage"></p>
+<p>下面我们详细分析状态变量的存储规则。</p>
+<h4 id="静态类型的状态变量"><a href="#静态类型的状态变量" class="headerlink" title="静态类型的状态变量"></a>静态类型的状态变量</h4><p>如下表所示，静态类型的状态变量所占据的位数与类型有关。</p>
+<blockquote>
+<ol>
+<li>布尔类型存储位数为8位。</li>
+<li>整数类型存储位数与具体类型有关。</li>
+<li>地址类型存储位数为160位。</li>
+<li>固定大小的字节数组存储位数与具体类型有关。</li>
+<li>枚举类型的存储位数与具体枚举个数有关。少于8个相当于uint8类型，8～16个相当于uint16类型，以此类推。</li>
+<li>静态数组 T[k] 中元素的存储位数与 T 相关。</li>
+</ol>
+</blockquote>
+<p>bytes 和 string 类型较为特殊，会在下文分析。结构体类型的状态变量的存储位数与具体的结构体定义相关。</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>存储位数</th>
+<th>存储顺序</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bool</td>
+<td>8</td>
+<td>从右至左，0表示false，否则表示true</td>
+<td>false：0x00 </td>
+</tr>
+<tr>
+<td>int8</td>
+<td>8</td>
+<td>从右至左</td>
+<td>10: 0x0a </td>
+</tr>
+<tr>
+<td>int16</td>
+<td>16</td>
+<td>从右至左</td>
+<td>10: 0x000a </td>
+</tr>
+<tr>
+<td>int…</td>
+<td>…</td>
+<td>从右至左</td>
+<td>10: 0x00…000a </td>
+</tr>
+<tr>
+<td>int256</td>
+<td>256</td>
+<td>从右至左</td>
+<td>10: 0x0000…000a(256位) </td>
+</tr>
+<tr>
+<td>uint8</td>
+<td>8</td>
+<td>从右至左</td>
+<td>10: 0x0a </td>
+</tr>
+<tr>
+<td>uint16</td>
+<td>16</td>
+<td>从右至左</td>
+<td>10: 0x000a </td>
+</tr>
+<tr>
+<td>uint…</td>
+<td>…</td>
+<td>从右至左</td>
+<td>10: 0x00…000a </td>
+</tr>
+<tr>
+<td>uint256</td>
+<td>256</td>
+<td>从右至左</td>
+<td>10: 0x0000…000a（256位）</td>
+</tr>
+<tr>
+<td>bytes1</td>
+<td>8</td>
+<td>从左到右</td>
+<td>“1”: 0x31 </td>
+</tr>
+<tr>
+<td>bytes2</td>
+<td>16</td>
+<td>从左到右</td>
+<td>“1”: 0x3100 </td>
+</tr>
+<tr>
+<td>bytes…</td>
+<td>…</td>
+<td>从左到右</td>
+<td>“1”: 0x3100…00 </td>
+</tr>
+<tr>
+<td>bytes32</td>
+<td>256</td>
+<td>从左到右</td>
+<td>“1”: 0x3100…0000（256位）</td>
+</tr>
+<tr>
+<td>address</td>
+<td>160</td>
+<td>从右至左</td>
+<td>0x 0346 de49 0a2e bd37 e1f6 f216 b137 6c60 f19c b9d6 </td>
+</tr>
+<tr>
+<td>enum</td>
+<td>与具体枚举类型的个数有关</td>
+<td>相当于uint类型的存储规则</td>
+<td>enum AccountType{Customer, Merchant} 的定义，类型为uint8 </td>
+</tr>
+<tr>
+<td>静态数组T[k]</td>
+<td>T具体类型相关</td>
+<td>T具体类型相关</td>
+<td>uint8[10]的存储结构相当于存储10个uint8类型</td>
+</tr>
+</tbody>
+</table>
+<h4 id="动态类型的状态变量"><a href="#动态类型的状态变量" class="headerlink" title="动态类型的状态变量"></a>动态类型的状态变量</h4><p>动态类型的状态变量包括 <strong>mapping</strong> 类型和 <strong>动态数组</strong> 类型。由于动态类型的大小不可预测，所以采用了 <strong>Keccak256</strong> 哈希计算方式来找到map值或者数组元素的地址。</p>
+<h5 id="mapping-动态类型"><a href="#mapping-动态类型" class="headerlink" title="mapping 动态类型"></a>mapping 动态类型</h5><p><strong>mapping</strong> 类型首先会根据以上规则分配到一个槽，这个槽空间并不会拿来存储什么值。但是这个槽空间是必须的，因为需要用该槽的地址进行哈希计算。因此就算有两个相同的<strong>mapping</strong>，它们的起始槽空间也不一样，所以进行哈希计算后会有不同的哈希分布。</p>
+<p>地址哈希计算公式：<code>position = keccak256(k . p)</code> （k为 <strong>mapping</strong> 的键，p为起始槽空间，. 为连接运算）。</p>
+<p>如果 <strong>mapping</strong> 类型的值为非基本类型，那么槽地址加上位移。</p>
+<p>如下代码所示，data[4][9].b 的地址就是：<br><code>keccak256(uint256(9) . keccak256(uint256(4) . uint256(1))) + 1</code>。<br>状态变量 <strong>x</strong> 的地址为0x00…00，状态变量 <strong>data</strong> 的的地址为0x00…01。所以 data[4][9] 先计算key为4的mapping，即<code>keccak256(uint256(4) . uint256(1))</code>。然后再计算key为9的mapping，即<code>keccak256(uint256(9) . keccak256(uint256(4) . uint256(1)))</code>，哈希计算出来的地址是s的地址，也是结构体中 a 的地址。最后因为想要得到结构体中 b 的地址，所以加1。</p>
+<pre><code>pragma solidity ^0.4.0;
+
+contract C {
+  struct s { uint a; uint b; }
+  uint x;
+  mapping(uint =&gt; mapping(uint =&gt; s)) data;
+}
+</code></pre><p>写成Golang的大致代码：（</p>
+<pre><code>kec256Hash := crypto.NewKeccak256Hash(&quot;keccak256&quot;)
+address1 := kec256Hash.ByteHash([]byte(common.Hex2Bytes(&quot;00...04&quot; + &quot;00...01&quot;))).Hex()
+address2 := kec256Hash.ByteHash([]byte(common.Hex2Bytes(&quot;00...09&quot; + address1))).Hex()
+result := address2 + 1
+</code></pre><blockquote>
+<p>注意，这里的k和p都要是64长度的字符串（也就是把256位的地址转换为64长度的16进制）。</p>
+</blockquote>
+<h5 id="动态数组类型"><a href="#动态数组类型" class="headerlink" title="动态数组类型"></a>动态数组类型</h5><p>对于动态数组类型，起始槽空间存储着数组元素的个数，也就是数组的长度。</p>
+<p>地址哈希计算公式：<code>position = keccak256(p)</code></p>
+<p>得到地址之后，再根据数组长度，依次得到数组元素的具体地址。这里也符合压缩规则。</p>
+<blockquote>
+<p>值得注意的是，二维数组data[2][3]其实第一维度是3，第二维度是2，与常见的编程语言（C，Java等）相反。</p>
+</blockquote>
+<h4 id="字符串类型"><a href="#字符串类型" class="headerlink" title="字符串类型"></a>字符串类型</h4><p>对于字符串类型，因为字符串长度不知，而一个槽最多存储256位。所以对于字符串：</p>
+<blockquote>
+<ol>
+<li><p>如果字符串长度不超过31个字节，那么值存储在该槽中。该槽的最后一个字节表示长度，值为 2 * length。</p>
+</li>
+<li><p>如果字符串长度超过31个字节，那么值存储在 keccak256(p) 地址中（如果一个槽不够存放值，那么分配新槽）。该槽存储字符串长度，值为 2 * length + 1。</p>
+</li>
+</ol>
+</blockquote>
+<p>所以对于字符串类型，可以先获取最后1个字节的值，判断是否是偶数，然后再根据不同方式获取字符串的值。</p>
+<p>如果类型是非基本元素，那么递归调用以上规则。</p>
+<h3 id="举个例子"><a href="#举个例子" class="headerlink" title="举个例子"></a>举个例子</h3><p>现在，我们来举个例子。</p>
+<pre><code>contract Demo {
+    uint8    var1;
+    uint16   var2;
+    uint16   var3;
+    uint     var4;
+    bytes8   var5;
+    bytes8   var6;
+    bytes32  var7;
+    string   var8;
+    string   var9;
+    mapping(bytes32 =&gt; mapping(bytes32 =&gt; uint)) userMap;
+    mapping(bytes32 =&gt; uint[]) bankMap;
+    uint[3]  array1;
+    uint[]   array2;
+    uint16[2][3]  array3;
+    uint16[][]  array4;
+    string[3]   strArray1;
+    string[]    strArray2;
+
+    function Demo() {
+        var1 = 1;
+        var2 = 2;
+        var3 = 3;
+        var4 = 4;
+        var5 = &quot;a&quot;;
+        var6 = &quot;b&quot;;
+        var7 = &quot;c&quot;;
+        var8 = &quot;abc&quot;;
+        var9 = &quot;aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggggggggg&quot;;
+        userMap[&quot;001&quot;][&quot;002&quot;] = 5;
+        userMap[&quot;003&quot;][&quot;004&quot;] = 6;
+        bankMap[&quot;10086&quot;] = [7,8,9];
+        bankMap[&quot;10087&quot;] = [10,11,12,13,14];
+        array1[0]=100;
+        array1[1]=200;
+        array2.push(300);
+        array2.push(400);
+        array3[0] = [500];
+        array3[1] = [600,700];
+        array4.push([700,800]);
+        array4.push([900,1000,1100]);
+        strArray1[0]=&quot;a&quot;;
+        strArray1[1]=&quot;bbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggggggggg&quot;;
+        strArray2.push(&quot;b&quot;);
+        strArray2.push(&quot;aaaaaaaaaabbbbbbbbbbccccccccccddddddddddeeeeeeeeeeffffffffffgggggggggg&quot;);
+    }
+}
+</code></pre><p>以上合约部署后，由于构造函数的调用，存储空间的内容为：</p>
+<table>
+<thead>
+<tr>
+<th>槽地址</th>
+<th>槽内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000</td>
+<td>0300 0201</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0001</td>
+<td>04</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0002</td>
+<td>6200 0000 0000 0000 6100 0000 0000 0000</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0003</td>
+<td>6300 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0004</td>
+<td>6162 6300 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0006</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0005</td>
+<td>8d</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0008</td>
+<td>64</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0009</td>
+<td>c8</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 000b</td>
+<td>02</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 000c</td>
+<td>01f4</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 000d</td>
+<td>02bc 0258</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 000f</td>
+<td>02</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0010</td>
+<td>6100 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0002</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0011</td>
+<td>79</td>
+</tr>
+<tr>
+<td>0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0013</td>
+<td>02</td>
+</tr>
+<tr>
+<td>0175 b7a6 3842 7703 f0db e7bb 9bbf 987a 2551 717b 34e7 9f33 b5b1 008d 1fa0 1db9</td>
+<td>012c</td>
+</tr>
+<tr>
+<td>0175 b7a6 3842 7703 f0db e7bb 9bbf 987a 2551 717b 34e7 9f33 b5b1 008d 1fa0 1dba</td>
+<td>0190</td>
+</tr>
+<tr>
+<td>036b 6384 b5ec a791 c627 6115 2d0c 79bb 0604 c104 a5fb 6f4e b070 3f31 54bb 3db0</td>
+<td>6161 6161 6161 6161 6161 6262 6262 6262 6262 6262 6363 6363 6363 6363 6363 6464</td>
+</tr>
+<tr>
+<td>036b 6384 b5ec a791 c627 6115 2d0c 79bb 0604 c104 a5fb 6f4e b070 3f31 54bb 3db1</td>
+<td>6464 6464 6464 6464 6565 6565 6565 6565 6565 6666 6666 6666 6666 6666 6767 6767</td>
+</tr>
+<tr>
+<td>036b 6384 b5ec a791 c627 6115 2d0c 79bb 0604 c104 a5fb 6f4e b070 3f31 54bb 3db2</td>
+<td>6767 6767 6767 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000</td>
+</tr>
+<tr>
+<td>31ec c21a 745e 3968 a04e 9570 e442 5bc1 8fa8 019c 6802 8196 b546 d166 9c20 0c68</td>
+<td>6262 6262 6262 6262 6262 6363 6363 6363 6363 6363 6464 6464 6464 6464 6464 6565</td>
+</tr>
+<tr>
+<td>31ec c21a 745e 3968 a04e 9570 e442 5bc1 8fa8 019c 6802 8196 b546 d166 9c20 0c69</td>
+<td>6565 6565 6565 6565 6666 6666 6666 6666 6666 6767 6767 6767 6767 6767 0000 0000</td>
+</tr>
+<tr>
+<td>49e8 84de b6b3 6c8e e2bf 2731 8acb 9757 d4a9 6c66 e866 3459 9844 b329 ada5 69df</td>
+<td>044c 03e8 0384</td>
+</tr>
+<tr>
+<td>66de 8ffd a797 e3de 9c05 e8fc 57b3 bf0e c28a 930d 40b0 d285 d93c 0650 1cf6 a090</td>
+<td>6200 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0002</td>
+</tr>
+<tr>
+<td>66de 8ffd a797 e3de 9c05 e8fc 57b3 bf0e c28a 930d 40b0 d285 d93c 0650 1cf6 a091</td>
+<td>8d</td>
+</tr>
+<tr>
+<td>7399 827b 1e68 b497 430a 72e6 7725 4393 1f27 51c9 09d0 1c20 1733 82a4 a947 263c</td>
+<td>05</td>
+</tr>
+<tr>
+<td>8d11 08e1 0bcb 7c27 dddf c02e d9d6 93a0 7403 9d02 6cf4 ea42 40b4 0f7d 581a c802</td>
+<td>02</td>
+</tr>
+<tr>
+<td>8d11 08e1 0bcb 7c27 dddf c02e d9d6 93a0 7403 9d02 6cf4 ea42 40b4 0f7d 581a c803</td>
+<td>03</td>
+</tr>
+<tr>
+<td>91d5 0dd0 47ad bb71 a820 341a ebb5 83bf 75e9 232e 81f5 6500 841b 8f1d 70c1 632d</td>
+<td>6161 6161 6161 6161 6161 6262 6262 6262 6262 6262 6363 6363 6363 6363 6363 6464</td>
+</tr>
+<tr>
+<td>91d5 0dd0 47ad bb71 a820 341a ebb5 83bf 75e9 232e 81f5 6500 841b 8f1d 70c1 632e</td>
+<td>6464 6464 6464 6464 6565 6565 6565 6565 6565 6666 6666 6666 6666 6666 6767 6767</td>
+</tr>
+<tr>
+<td>91d5 0dd0 47ad bb71 a820 341a ebb5 83bf 75e9 232e 81f5 6500 841b 8f1d 70c1 632f</td>
+<td>6767 6767 6767 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000 0000</td>
+</tr>
+<tr>
+<td>9f0a 1398 8bdb eae5 6f1b 4f41 e53e d9b3 de4a 6902 722f 517b 4ef2 39da bba0 b34c</td>
+<td>07</td>
+</tr>
+<tr>
+<td>9f0a 1398 8bdb eae5 6f1b 4f41 e53e d9b3 de4a 6902 722f 517b 4ef2 39da bba0 b34d</td>
+<td>08</td>
+</tr>
+<tr>
+<td>9f0a 1398 8bdb eae5 6f1b 4f41 e53e d9b3 de4a 6902 722f 517b 4ef2 39da bba0 b34e</td>
+<td>09</td>
+</tr>
+<tr>
+<td>b8e9 88fb db32 de37 1983 ecc5 ec88 6716 ea07 1793 398d 3b10 b18b 83b6 86c9 da7d</td>
+<td>06</td>
+</tr>
+<tr>
+<td>bee3 7410 fc5b 77e7 98bd 0138 5d45 7e04 2711 adb9 07f1 5c82 467b b80d 0602 b1c8</td>
+<td>03</td>
+</tr>
+<tr>
+<td>c928 8bb4 db3b e5df ff26 9e68 fef8 65ec 8c48 c6d7 6d1b 377f 8fd9 9275 0ef9 7293</td>
+<td>0a</td>
+</tr>
+<tr>
+<td>c928 8bb4 db3b e5df ff26 9e68 fef8 65ec 8c48 c6d7 6d1b 377f 8fd9 9275 0ef9 7294</td>
+<td>0b</td>
+</tr>
+<tr>
+<td>c928 8bb4 db3b e5df ff26 9e68 fef8 65ec 8c48 c6d7 6d1b 377f 8fd9 9275 0ef9 7295</td>
+<td>0c</td>
+</tr>
+<tr>
+<td>c928 8bb4 db3b e5df ff26 9e68 fef8 65ec 8c48 c6d7 6d1b 377f 8fd9 9275 0ef9 7296</td>
+<td>0d</td>
+</tr>
+<tr>
+<td>c928 8bb4 db3b e5df ff26 9e68 fef8 65ec 8c48 c6d7 6d1b 377f 8fd9 9275 0ef9 7297</td>
+<td>0e</td>
+</tr>
+<tr>
+<td>f31e e89b 8f31 15a2 b487 50c8 c8a2 d7a5 b875 a0ce 5d42 ff75 45f3 2953 db9e 4aa3</td>
+<td>0320 02bc</td>
+</tr>
+<tr>
+<td>f56c 7ffb 723d b564 2b3d 1ea0 a20d e5a1 4314 9f33 0f4c c5b4 ffbe cb57 031a cd6c</td>
+<td>05</td>
+</tr>
+</tbody>
+</table>
+<p>下面我们使用上文提到的存储规则详细解析这份存储内容。</p>
+<blockquote>
+<ol>
+<li><p>var1、var2、var3分别占据8、16、16个位（bit）的存储空间，所以由于压缩规则，它们在一个槽中。也就是在<code>0000000000000000000000000000000000000000000000000000000000000000</code>槽中。槽的内容为<code>03000201</code>，按照整数类型从右到左的存储顺序，所以var1的值为0x01，var2的值为0x0002，var3的值为0x03（其实是0x0003，但是从leveldb取数据时会把前面的00忽略）。</p>
+</li>
+<li><p>var4占据256个位的存储空间，由于前面0x00..00的槽空间剩余可分配位数为256-8-16-16=216。所以不足以分配给var4状态变量，因此分配新槽给var4。var4槽的地址为<code>0000000000000000000000000000000000000000000000000000000000000001</code>，值为 <code>04</code>。所以var4的值为0x04。</p>
+</li>
+<li><p>var5、var6分别占据64、64个位的存储空间，所以它们会存储在一个槽中，也就是<code>0000000000000000000000000000000000000000000000000000000000000002</code>中，槽的值为<code>62000000000000006100000000000000</code>。由于字节数组存储顺序为从左到右，所以var5的值为<code>6100000000000000</code>（0x00不表示字符，所以值为0x61，也就是a），var6的值为<code>6200000000000000</code>。</p>
+</li>
+<li><p>var7占据256个位的存储空间。所以存储在<code>0000000000000000000000000000000000000000000000000000000000000003</code>，值为<code>6300000000000000000000000000000000000000000000000000000000000000</code>（也就是c）。</p>
+</li>
+<li><p>var8是string类型，存储在<code>0000000000000000000000000000000000000000000000000000000000000004</code>槽中。所以判断最后一个字节是否是偶数，发现是6，那么可知var8的值就存储在该槽中，并且长度为6/2=3，也就是<code>616263</code>。</p>
+</li>
+<li><p>var9是string类型，所以读取<code>0000000000000000000000000000000000000000000000000000000000000005</code>槽的值，发现最后一个字节是0x8d（十进制141）。所以需要做哈希计算，keccak256(0000000000000000000000000000000000000000000000000000000000000005) = 036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0。并且可以知道字符串长度为(141-1)／2=70个字节。而一个槽最多256位，32个字节。因此后面还有2个槽（共3个槽）也是用来存储var9的值。</p>
+</li>
+<li><p>userMap是mapping类型，所以需要做哈希计算。根据代码可知，使用了两组key，分别是{“001”, “002”}和{“003”, “004”}。我们先看第一组。如下计算哈希，所以存储在<code>f56c7ffb723db5642b3d1ea0a20de5a143149f330f4cc5b4ffbecb57031acd6c</code>上的<code>05</code>就是值。其余mapping类型的方式类似，不再阐述。</p>
+<blockquote>
+<p>keccak256(“303031000000…0000” + “0000…000000006”) =<br>0xdec3a5381b3472ea0094010190dc94e40c4380ae77d46829b10b3f37e9f09dae </p>
+<p>keccak256(“303032000000…0000” +<br>“b2795388d06dd8f9b12622b0a4086887289759945e634f6fad6e946543627b48”) =<br>0xf56c7ffb723db5642b3d1ea0a20de5a143149f330f4cc5b4ffbecb57031acd6c</p>
+</blockquote>
+</li>
+<li><p>array1是长度为3的静态数组。对于数组，首先需要开新槽，然后内部再做压缩。因为数组类型为uint，占据256位，所以其存储在<code>00...08</code>，<code>00...09</code>，<code>00...08</code>，<code>00...0a</code>槽上。</p>
+</li>
+<li><p>array2是类型为uint的动态数组，所以<code>00...0b</code>上存储了该数组长度，也就是2个数组元素。然后通过地址哈希计算，得到地址<code>0175b7a638427703f0dbe7bb9bbf987a2551717b34e79f33b5b1008d1fa01db9</code>，因为是长度为2，所以后面一个槽也属于array2。</p>
+</li>
+<li><p>array3是类型为uint16的二维静态数组。所以先看第一维度，值为3，也就是有3个元素。再看第二维度，值为2，也就是有2个元素。然后使用压缩规则，可以发现第二维度的数据是可以放在一个槽中的，因为对于第一维度，其数组元素类型为uint16[2]，仍然是数组。而对于第二维度，数组元素类型为uint16，所以符合压缩规则。所以<code>00...0c</code>，<code>00...0d</code>，<code>00...0e（值为零）</code>是属于array3的。<code>00...0c</code>中存储的是0x01f4(500)，<code>00...0d</code>中存储的是0x02bc0258，2个元素，0x02bc(700) 和 0x0258(600)。</p>
+</li>
+</ol>
+<p>其余状态变量类似，这里不作阐述。</p>
+</blockquote>
+<h3 id="有趣的事情"><a href="#有趣的事情" class="headerlink" title="有趣的事情"></a>有趣的事情</h3><h4 id="压缩规则对数据声明的影响"><a href="#压缩规则对数据声明的影响" class="headerlink" title="压缩规则对数据声明的影响"></a>压缩规则对数据声明的影响</h4><p>当元素的大小小于32个字节时，合约的gas消耗可能会更高。这是因为EVM每次操作32个字节。因此，如果元素大小小于32个字节，那么EVM必须花费更多的操作去裁剪32个字节来得到想要的大小。</p>
+<p>所以这个只有在处理storage类型的数据时才会有益。因为编译器会对多个元素进行压缩处理。这样，就会将多次的读或写放在一次操作中。</p>
+<p>因此在定义storage变量时，顺序很重要。比如要声明uint128, uint128, uint256的顺序，而不是uint128, uint256, uint128的顺序。前者只需要2次读取操作，而后者需要3次。</p>
+<h4 id="数据冲突"><a href="#数据冲突" class="headerlink" title="数据冲突"></a>数据冲突</h4><p>如果看了上文，你会发现mapping是会通过哈希来计算地址。那么如果哈希出来的地址与其他变量冲突，那会发生什么？</p>
+<p>假定有以下这个合约：</p>
+<pre><code>contract Demo {
+    mapping(bytes32 =&gt; uint) bankMap;
+    function Demo() {
+        bankMap[&quot;001&quot;] = 123;
+    }
+}
+</code></pre><p>其存储空间内容为：</p>
+<table>
+<thead>
+<tr>
+<th>槽地址</th>
+<th>槽内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9114 e9f4 d72d 33a5 1c13 1b85 6d3c 3303 fce9 ef28 c684 2523 b0d4 51ac e6a0 4dbb</td>
+<td>7b</td>
+</tr>
+</tbody>
+</table>
+<p>那么如果有以下这个合约：</p>
+<pre><code>contract Demo {
+    mapping(bytes32 =&gt; uint) bankMap;
+    uint[0x9114e9f4d72d33a51c131b856d3c3303fce9ef28c6842523b0d451ace6a04dbb] data;
+    function Demo() {
+        bankMap[&quot;001&quot;] = 123;
+        data[0x9114e9f4d72d33a51c131b856d3c3303fce9ef28c6842523b0d451ace6a04dba] = 10;
+    }
+}
+</code></pre><p>其存储空间内容为：</p>
+<table>
+<thead>
+<tr>
+<th>槽地址</th>
+<th>槽内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9114 e9f4 d72d 33a5 1c13 1b85 6d3c 3303 fce9 ef28 c684 2523 b0d4 51ac e6a0 4dbb</td>
+<td>0a</td>
+</tr>
+</tbody>
+</table>
+<p>我们发现当发生地址冲突时，solidity采取是直接覆盖的方式。</p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ol>
+<li><a href="http://solidity.readthedocs.io/en/latest/structure-of-a-contract.html" target="_blank" rel="external">http://solidity.readthedocs.io/en/latest/structure-of-a-contract.html</a></li>
+<li><a href="http://solidity.readthedocs.io/en/latest/types.html" target="_blank" rel="external">http://solidity.readthedocs.io/en/latest/types.html</a></li>
+<li><a href="http://solidity.readthedocs.io/en/latest/miscellaneous.html" target="_blank" rel="external">http://solidity.readthedocs.io/en/latest/miscellaneous.html</a></li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Go/" rel="tag"># Go</a>
+          
+            <a href="/tags/区块链/" rel="tag"># 区块链</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/06/27/如何在mac终端下控制字体颜色/" rel="next" title="如何在mac终端下控制字体颜色">
+                <i class="fa fa-chevron-left"></i> 如何在mac终端下控制字体颜色
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/11/09/spark之ml初步使用/" rel="prev" title="spark之ml初步使用">
+                spark之ml初步使用 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/user2.png"
+               alt="FaceHo" />
+          <p class="site-author-name" itemprop="name">FaceHo</p>
+           
+              <p class="site-description motion-element" itemprop="description">stay hungry, stay foolish</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/shichaohao" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://www.linkedin.com/in/chaohao-shi-285703106/" target="_blank" title="linkedin">
+                  
+                    <i class="fa fa-fw fa-linkedin"></i>
+                  
+                  linkedin
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/shi-zhao-hao" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              Links
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.bo-song.com" title="宋博" target="_blank">宋博</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.chenquan.me" title="陈权" target="_blank">陈权</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#内容简介"><span class="nav-number">1.</span> <span class="nav-text">内容简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#状态变量的定义与类别"><span class="nav-number">2.</span> <span class="nav-text">状态变量的定义与类别</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#状态变量是什么"><span class="nav-number">2.1.</span> <span class="nav-text">状态变量是什么</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#状态变量的类型"><span class="nav-number">2.2.</span> <span class="nav-text">状态变量的类型</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#动态类型"><span class="nav-number">2.2.1.</span> <span class="nav-text">动态类型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#静态类型"><span class="nav-number">2.2.2.</span> <span class="nav-text">静态类型</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#状态变量的存储规则"><span class="nav-number">3.</span> <span class="nav-text">状态变量的存储规则</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#存储空间"><span class="nav-number">3.1.</span> <span class="nav-text">存储空间</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#静态类型的状态变量"><span class="nav-number">3.2.</span> <span class="nav-text">静态类型的状态变量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#动态类型的状态变量"><span class="nav-number">3.3.</span> <span class="nav-text">动态类型的状态变量</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#mapping-动态类型"><span class="nav-number">3.3.1.</span> <span class="nav-text">mapping 动态类型</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#动态数组类型"><span class="nav-number">3.3.2.</span> <span class="nav-text">动态数组类型</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#字符串类型"><span class="nav-number">3.4.</span> <span class="nav-text">字符串类型</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#举个例子"><span class="nav-number">4.</span> <span class="nav-text">举个例子</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#有趣的事情"><span class="nav-number">5.</span> <span class="nav-text">有趣的事情</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#压缩规则对数据声明的影响"><span class="nav-number">5.1.</span> <span class="nav-text">压缩规则对数据声明的影响</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#数据冲突"><span class="nav-number">5.2.</span> <span class="nav-text">数据冲突</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-number">6.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">FaceHo</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "4419bf822dca4a6ab0d1ed9b2127f410",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

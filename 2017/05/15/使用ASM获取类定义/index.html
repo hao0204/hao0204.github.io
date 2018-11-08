@@ -1,0 +1,1190 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="java,asm," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.1" />
+
+
+
+
+
+
+<meta name="description" content="内容简介ASM 是一个java字节码操纵框架。在本人学习、查阅资料过程中，发现资料较少，而且大多讲述如何使用其来生成一个类。本文主要讲述对于java字节码，如何使用ASM树API来获取类的定义。">
+<meta name="keywords" content="java,asm">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用ASM获取类定义">
+<meta property="og:url" content="http://yoursite.com/2017/05/15/使用ASM获取类定义/index.html">
+<meta property="og:site_name" content="FaceHo">
+<meta property="og:description" content="内容简介ASM 是一个java字节码操纵框架。在本人学习、查阅资料过程中，发现资料较少，而且大多讲述如何使用其来生成一个类。本文主要讲述对于java字节码，如何使用ASM树API来获取类的定义。">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://yoursite.com/images/使用ASM获取类定义/asm%20use%20first%20step-1.png">
+<meta property="og:image" content="http://yoursite.com/images/使用ASM获取类定义/asm%20use%20first%20step-2.png">
+<meta property="og:updated_time" content="2017-10-12T12:33:32.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用ASM获取类定义">
+<meta name="twitter:description" content="内容简介ASM 是一个java字节码操纵框架。在本人学习、查阅资料过程中，发现资料较少，而且大多讲述如何使用其来生成一个类。本文主要讲述对于java字节码，如何使用ASM树API来获取类的定义。">
+<meta name="twitter:image" content="http://yoursite.com/images/使用ASM获取类定义/asm%20use%20first%20step-1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":0,"b2t":false,"scrollpercent":false},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/05/15/使用ASM获取类定义/"/>
+
+
+
+
+
+  <title>使用ASM获取类定义 | FaceHo</title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+          m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-90667458-1', 'auto');
+  ga('send', 'pageview');
+</script>
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">FaceHo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">嗯哼～</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-commonweal">
+          <a href="/404.html" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-heartbeat"></i> <br />
+            
+            公益404
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/15/使用ASM获取类定义/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="FaceHo">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/user2.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="FaceHo">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">使用ASM获取类定义</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-05-15T14:11:21+08:00">
+                2017-05-15
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/技术/" itemprop="url" rel="index">
+                    <span itemprop="name">技术</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a class="cloud-tie-join-count" href="/2017/05/15/使用ASM获取类定义/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count join-count" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h3 id="内容简介"><a href="#内容简介" class="headerlink" title="内容简介"></a>内容简介</h3><p><a href="http://asm.ow2.org" target="_blank" rel="external"><strong><code>ASM</code></strong></a> 是一个<code>java</code>字节码操纵框架。在本人学习、查阅资料过程中，发现资料较少，而且大多讲述如何使用其来生成一个类。本文主要讲述对于<code>java</code>字节码，如何使用<code>ASM</code>树<code>API</code>来获取类的定义。</p>
+<a id="more"></a>
+<h3 id="ASM介绍"><a href="#ASM介绍" class="headerlink" title="ASM介绍"></a>ASM介绍</h3><p><code>ASM</code>是一个<code>java</code>字节码操纵、分析框架，它能被用来动态生成类或者修改现有类的功能，可以直接产生二进制类文件。<code>ASM</code>提供了与其他字节码框架相似的功能，但是它更关注于易使用性以及性能。因为它设计和实现尽可能的轻量以及快速，所以在动态系统中的使用非常普遍。</p>
+<p><code>ASM</code>库提供了两个用于生成和转换已编译类的<code>API</code>：一个是核心<code>API</code>，以基于事件的形式来表示类，另一个是树<code>API</code>，以基于对象的形式来表示类。这两者各有有缺点：</p>
+<blockquote>
+<ol>
+<li>基于事件的<code>API</code>要快于基于对象的<code>API</code>，所需要的内存也较少,因为它不需要在内存中 创建和存储用于表示类的对象树。</li>
+<li>但在使用基于事件的<code>API</code>时，类转换的实现可能要更难一些，因为在任意给定时刻，类中只有一个元素可供使用(也就是与当前事件对应的元素)，而在使用基于对象的<code>API</code>时，可以在内存中获得整个类。</li>
+</ol>
+</blockquote>
+<p><code>ASM</code>框架中的核心类有以下几个：</p>
+<blockquote>
+<ol>
+<li><p><code>ClassReader</code>: 该类用来解析编译过的<code>class</code>字节码文件。</p>
+</li>
+<li><p><code>ClassWriter</code>: 该类用来重新构建编译后的类，比如说修改类名、属性以及方法，甚至可以生成新的类的字节码文件。</p>
+</li>
+<li><p><code>ClassAdapter</code>: 该类实现了<code>ClassVisitor</code>接口，它将对它的方法调用委托给另一个<code>ClassVisitor</code>对象。</p>
+</li>
+<li><p><code>ClassNode</code>：基于<code>ClassNode</code>可以用于生成和转换已编译好的 Java 类，本文也是主要使用<code>ClassNode</code>。</p>
+</li>
+</ol>
+</blockquote>
+<p>接下来看一下已编译好的类的总体结构</p>
+<h3 id="已编译好的类总体结构"><a href="#已编译好的类总体结构" class="headerlink" title="已编译好的类总体结构"></a>已编译好的类总体结构</h3><h4 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h4><p>已编译类的总体结构非常简单。实际上，与原生编译应用程序不同，已编译类中保留了来自源代码的结构信息和几乎所有符号。事实上，已编译类中包含如下各部分：</p>
+<blockquote>
+<ol>
+<li><p>描述类的修饰符（比如<code>public</code>和<code>private</code>）、名字、超类、接口和注释。</p>
+</li>
+<li><p>用来描述类中声明的每个字段的修饰符、名字、类型和注释。 </p>
+</li>
+<li><p>描述类中声明的每个方法及构造器的修饰符、名字、返回类型与参数类型、注释。它还以 Java 字节代码指令的形式，包含了该方法的已编译代码。</p>
+</li>
+</ol>
+</blockquote>
+<p>但是在源文件类和已编译类之间还是有一些差异：</p>
+<blockquote>
+<ol>
+<li><p>一个已编译类仅描述一个类，而一个源文件中可以包含几个类。比如，一个源文件描述 了一个类，这个类又有一个内部类，那这个源文件会被编译为两个类文件：主类和内部类各一个文件。但是，主类文件中包含对其内部类的引用，定义了内部方法的内层类会包含引用，引向其封装的方法。</p>
+</li>
+<li><p>已编译类中当然不包含注释（<code>comment</code>），但可以包含类、字段、方法和代码属性，可以利用这些属性为相应元素关联更多信息。<code>Java 5</code> 中引入可用于同一目的的注释（<code>annotaion</code>）以后，属性已经变得没有什么用处了。</p>
+</li>
+<li><p>编译类中不包含<code>package</code>和<code>import</code>部分，因此，所有类型名字都必须是完全限定的。</p>
+</li>
+<li><p>另一个非常重要的结构性差异是已编译类中包含常量池（<code>constant pool</code>）部分。这个池是一个数组，包含了在类中出现的所有数值、字符串和类型常量。这些常量仅在常量池中定义一次，然后可以利用其索引，在类文件中的所有其他各部分进行引用。</p>
+</li>
+</ol>
+</blockquote>
+<p>一个已编译类的整体规范如下图：<br><img src="/images/使用ASM获取类定义/asm use first step-1.png" alt="Overall structure of a compiled class(* means zero or more)"></p>
+<p>java 类型在已编译类和源文件类中的表示不同，后面几节来具体的解释。</p>
+<h4 id="内部名"><a href="#内部名" class="headerlink" title="内部名"></a>内部名</h4><p>在许多情况下，一种类型只能是类或接口类型。例如，一个类的超类、由一个类实现的接口，或者由一个方法抛出的异常就不能是基元类型或数组类型，必须是类或接口类型。这些类型在已编译类中用内部名字表示。一个类的内部名就是这个类的完全限定名，其中的点号用斜线代替。例如，<code>String</code>的内部名为<code>java/lang/String</code>。</p>
+<h4 id="类型描述符"><a href="#类型描述符" class="headerlink" title="类型描述符"></a>类型描述符</h4><p>内部名只能用于类或接口类型。所有其他<code>java</code>类型，比如字段类型，在已编译类中都是用类型描述符表示的。如下表</p>
+<table>
+<thead>
+<tr>
+<th>Java类型</th>
+<th>类型描述符</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>boolean</code></td>
+<td><code>Z</code></td>
+</tr>
+<tr>
+<td><code>char</code></td>
+<td><code>C</code></td>
+</tr>
+<tr>
+<td><code>byte</code></td>
+<td><code>B</code></td>
+</tr>
+<tr>
+<td><code>short</code></td>
+<td><code>S</code></td>
+</tr>
+<tr>
+<td><code>int</code></td>
+<td><code>I</code></td>
+</tr>
+<tr>
+<td><code>float</code></td>
+<td><code>F</code></td>
+</tr>
+<tr>
+<td><code>long</code></td>
+<td><code>J</code></td>
+</tr>
+<tr>
+<td><code>double</code></td>
+<td><code>D</code></td>
+</tr>
+<tr>
+<td><code>Object</code></td>
+<td><code>Ljava/lang/Object;</code></td>
+</tr>
+<tr>
+<td><code>int[]</code></td>
+<td><code>[I</code></td>
+</tr>
+<tr>
+<td><code>Object[][]</code></td>
+<td><code>[[Ljava/lang/Object;</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="方法描述符"><a href="#方法描述符" class="headerlink" title="方法描述符"></a>方法描述符</h4><p>方法描述符是一个类型描述符列表，它用一个字符串描述一个方法的参数类型和返回类型。方法描述符以左括号开头，然后是每个形参的类型描述符，然后是一个右括号，接下来是返回类型的类型描述符。例如<code>(I)I</code>描述一个方法，它接受一个<code>int</code>类型的参数，返回一个<code>int</code>。下表给出了几个方法描述符实例。</p>
+<table>
+<thead>
+<tr>
+<th>源文件中的方法声明</th>
+<th>方法描述符</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>void m(int i, float f)</code></td>
+<td><code>(IF)V</code></td>
+</tr>
+<tr>
+<td><code>int m(Object o)</code></td>
+<td><code>(Ljava/lang/Object;)I</code></td>
+</tr>
+<tr>
+<td><code>int[] m(int i, String s)</code></td>
+<td><code>(ILjava/lang/String;)[I</code></td>
+</tr>
+<tr>
+<td><code>Object m(int[] i)</code></td>
+<td><code>([I)Ljava/lang/Object;</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="举个例子"><a href="#举个例子" class="headerlink" title="举个例子"></a>举个例子</h4><p>如我们有以下一个<code>java</code>文件：</p>
+<pre><code>public class People {
+    private String id;
+    private double money;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public double getMoney() {
+        return money;
+    }
+
+    public void setMoney(double money) {
+        this.money = money;
+    }
+}
+</code></pre><p>现在我们对它进行编译：<code>javac People.java</code>。现在我们得到了它的<code>class</code>文件，<code>People.class</code>文件。接着我们对它进行反编译：<code>javap -s -private People</code>。<code>-s</code>参数输出描述符，<code>-private</code>参数输出所有类成员和函数。对参数有不了解的可以使用<code>man javap</code>获取帮助。反编译的结果如下：</p>
+<pre><code>public class People {
+    private java.lang.String id;
+        descriptor: Ljava/lang/String;
+    private double money;
+        descriptor: D
+    public People();
+        descriptor: ()V
+
+    public java.lang.String getId();
+        descriptor: ()Ljava/lang/String;
+
+    public void setId(java.lang.String);
+        descriptor: (Ljava/lang/String;)V
+
+    public double getMoney();
+        descriptor: ()D
+    public void setMoney(double);
+            descriptor: (D)V
+}
+</code></pre><p>可以发现反编译所获得的描述符结果与我们预期的一致。</p>
+<p>现在已经了解了已编译好的类的总体结构，接下来使用<code>ASM</code>进行类的分析。</p>
+<h3 id="使用ASM"><a href="#使用ASM" class="headerlink" title="使用ASM"></a>使用<code>ASM</code></h3><h4 id="读取class字节码"><a href="#读取class字节码" class="headerlink" title="读取class字节码"></a>读取class字节码</h4><p><code>ClassReader</code>类用来读取<code>class</code>字节码文件。</p>
+<pre><code>File file = new File(&quot;.../.../*.class&quot;);
+try {
+    ClassReader reader = new ClassReader(new FileInputStream(file));
+    ClassNode cn = new ClassNode();
+    reader.accept(cn, 0);
+} catch (IOException e) {
+    e.printStackTrace();
+}
+</code></pre><h4 id="获取类的超类"><a href="#获取类的超类" class="headerlink" title="获取类的超类"></a>获取类的超类</h4><pre><code>String superClass = cn.superName;
+</code></pre><h4 id="获取类的接口"><a href="#获取类的接口" class="headerlink" title="获取类的接口"></a>获取类的接口</h4><pre><code>List&lt;String&gt; interfaces = cn.interfaces;
+</code></pre><h4 id="获取类的成员变量"><a href="#获取类的成员变量" class="headerlink" title="获取类的成员变量"></a>获取类的成员变量</h4><pre><code>List&lt;FieldNode&gt; fields = cn.fields;
+for (FieldNode fieldNode : fields) {
+    ...
+}
+</code></pre><p><code>fieldNode</code>就是类的一个成员变量，可以再从<code>fieldNode</code>中获取变量的修饰符、类型（描述符）、名字等。</p>
+<h5 id="获取类的成员变量的修饰符"><a href="#获取类的成员变量的修饰符" class="headerlink" title="获取类的成员变量的修饰符"></a>获取类的成员变量的修饰符</h5><pre><code>List&lt;FieldNode&gt; fields = cn.fields;
+for (FieldNode fieldNode : fields) {
+    int access = fieldNode.access;
+}
+</code></pre><p>获取到的<code>access</code>变量的值就是用来修饰类的成员变量的。但是或许你会疑惑修饰符应该是<code>public</code>, <code>private</code>等，为什么会是<code>int</code>类型的呢？那是因为字段修饰符放在<code>access_flags</code>项目中，映射如下：</p>
+<table>
+<thead>
+<tr>
+<th>标志名称</th>
+<th>标志值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ACC_PUBLIC</code></td>
+<td><code>0x0001</code></td>
+<td>字段是否是<code>public</code></td>
+</tr>
+<tr>
+<td><code>ACC_PRIVATE</code></td>
+<td><code>0x0002</code></td>
+<td>字段是否为<code>private</code></td>
+</tr>
+<tr>
+<td><code>ACC_PROTECTED</code></td>
+<td><code>0x0004</code></td>
+<td>字段是否为<code>protected</code></td>
+</tr>
+<tr>
+<td><code>ACC_STATIC</code></td>
+<td><code>0x0008</code></td>
+<td>字段是否为<code>static</code></td>
+</tr>
+<tr>
+<td><code>ACC_FINAL</code></td>
+<td><code>0x0010</code></td>
+<td>字段是否为<code>final</code></td>
+</tr>
+<tr>
+<td><code>ACC_VOLATILE</code></td>
+<td><code>0x0040</code></td>
+<td>字段是否为<code>volatile</code></td>
+</tr>
+<tr>
+<td><code>ACC_TRANSTENT</code></td>
+<td><code>0x0080</code></td>
+<td>字段是否为<code>transient</code></td>
+</tr>
+<tr>
+<td><code>ACC_SYNCHETIC</code></td>
+<td><code>0x1000</code></td>
+<td>字段是否为由编译器自动产生</td>
+</tr>
+<tr>
+<td><code>ACC_ENUM</code></td>
+<td><code>0x4000</code></td>
+<td>字段是否为<code>enum</code></td>
+</tr>
+</tbody>
+</table>
+<p>所以如果<code>access</code>值是<code>25</code>，那么它的类修饰符是<code>public static final</code>，因为<code>25=16(0x0010)+8(0x0008)+1(0x0001)</code>。</p>
+<h4 id="获取类的成员方法"><a href="#获取类的成员方法" class="headerlink" title="获取类的成员方法"></a>获取类的成员方法</h4><pre><code>List&lt;MethodNode&gt; methodNodes = cn.methods;
+for (MethodNode methodNode : methodNodes) {
+    ...    
+}
+</code></pre><p><code>methodNode</code>就是类的一个成员方法，可以再从<code>methodNode</code>中获取方法的修饰符、类型（描述符）、方法参数、方法内部的变量、名字、方法的具体指令等。</p>
+<h5 id="获取类的成员方法中的具体指令"><a href="#获取类的成员方法中的具体指令" class="headerlink" title="获取类的成员方法中的具体指令"></a>获取类的成员方法中的具体指令</h5><pre><code>List&lt;MethodNode&gt; methodNodes = cn.methods;
+for (MethodNode methodNode : methodNodes) {
+    InsnList insnList = methodNode.instructions;
+    for (int i = 0; i &lt; insnList.size(); ++i) {
+        ...
+    }    
+}
+</code></pre><p><code>InsnList</code>类中存放的一个关键的类成员是<code>AbstractInsnNode</code>，<code>AbstractInsnNode</code>是一个抽象类，可用的方法较少，接着就需要根据具体的类型获取需要的内容。如下面代码：</p>
+<pre><code>if (insnList.get(i) instanceof MethodInsnNode) {
+    MethodInsnNode methodInsnNode = (MethodInsnNode)insnList.get(i);
+    ...
+}
+</code></pre><h4 id="举个例子-1"><a href="#举个例子-1" class="headerlink" title="举个例子"></a>举个例子</h4><p><code>People</code>类：</p>
+<pre><code>public class People {
+    private String id;
+    private double weight;
+    public double height;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
+
+    public double getHeight() {
+        return height;
+    }
+
+    public void setHeight(double height) {
+        this.height = height;
+    }
+
+    public String Compare(People other) {
+        if (CompareHeight(other) &amp;&amp; CompareWeight(other))
+            return &quot;stronger&quot;;
+        return &quot;&quot;;
+    }
+
+    public boolean CompareHeight(People other) {
+        if (this.height &gt; other.height)
+            return true;
+        return false;
+    }
+
+    public boolean CompareWeight(People other) {
+        if (this.weight &gt; other.weight)
+            return true;
+        return false;
+    }
+}
+</code></pre><p>使用<code>ASM</code>获取类代码：</p>
+<pre><code>import jdk.internal.org.objectweb.asm.ClassReader;
+import jdk.internal.org.objectweb.asm.tree.*;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+public class Main {
+    public static void main(String[] args) {
+        File file = new File(&quot;src/main/java/People.class&quot;);
+        try {
+            ClassReader reader = new ClassReader(new FileInputStream(file));
+            ClassNode cn = new ClassNode();
+            reader.accept(cn, 0);
+
+            System.out.println(&quot;super class: &quot; + cn.superName);
+            System.out.println(&quot;implements interface: &quot; + cn.interfaces);
+
+            for (FieldNode fieldNode : cn.fields) {
+                System.out.println(&quot;class member name: &quot; + fieldNode.name + &quot;. class member type: &quot; + fieldNode.desc);
+            }
+
+            for (MethodNode methodNode : cn.methods) {
+                System.out.println(&quot;class method name: &quot; + methodNode.name + &quot;. class method type: &quot; + methodNode.desc);
+                InsnList insnList = methodNode.instructions;
+                for (int i = 0; i &lt; insnList.size(); i++) {
+                    if (insnList.get(i) instanceof MethodInsnNode) {
+                        MethodInsnNode methodInsnNode = (MethodInsnNode)insnList.get(i);
+                        System.out.println(&quot;\t&quot; + &quot;using method name: &quot; + methodInsnNode.name + &quot;. using method type: &quot; + methodInsnNode.desc);
+                    }
+                }
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre><p>最后结果:<br><img src="/images/使用ASM获取类定义/asm use first step-2.png" alt="Result"></p>
+<h4 id="使用环境"><a href="#使用环境" class="headerlink" title="使用环境"></a>使用环境</h4><ol>
+<li>使用<code>ASM</code>框架需要导入<code>asm</code>的<code>jar</code>包，可用<code>maven</code>导入。</li>
+<li><code>JDK1.8</code></li>
+</ol>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ol>
+<li><a href="http://asm.ow2.org" target="_blank" rel="external">http://asm.ow2.org</a></li>
+<li><a href="http://download.forge.objectweb.org/asm/asm4-guide.pdf" target="_blank" rel="external">http://download.forge.objectweb.org/asm/asm4-guide.pdf</a></li>
+<li>《深入理解Java虚拟机》第2版 周志明著</li>
+</ol>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/java/" rel="tag"># java</a>
+          
+            <a href="/tags/asm/" rel="tag"># asm</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/03/20/golang单元测试介绍/" rel="next" title="golang单元测试介绍">
+                <i class="fa fa-chevron-left"></i> golang单元测试介绍
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/06/27/如何在mac终端下控制字体颜色/" rel="prev" title="如何在mac终端下控制字体颜色">
+                如何在mac终端下控制字体颜色 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div id="cloud-tie-wrapper" class="cloud-tie-wrapper"></div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/user2.png"
+               alt="FaceHo" />
+          <p class="site-author-name" itemprop="name">FaceHo</p>
+           
+              <p class="site-description motion-element" itemprop="description">stay hungry, stay foolish</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/shichaohao" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://www.linkedin.com/in/chaohao-shi-285703106/" target="_blank" title="linkedin">
+                  
+                    <i class="fa fa-fw fa-linkedin"></i>
+                  
+                  linkedin
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://www.zhihu.com/people/shi-zhao-hao" target="_blank" title="知乎">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                  知乎
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              Links
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.bo-song.com" title="宋博" target="_blank">宋博</a>
+                </li>
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.chenquan.me" title="陈权" target="_blank">陈权</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#内容简介"><span class="nav-number">1.</span> <span class="nav-text">内容简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ASM介绍"><span class="nav-number">2.</span> <span class="nav-text">ASM介绍</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#已编译好的类总体结构"><span class="nav-number">3.</span> <span class="nav-text">已编译好的类总体结构</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#概述"><span class="nav-number">3.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#内部名"><span class="nav-number">3.2.</span> <span class="nav-text">内部名</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类型描述符"><span class="nav-number">3.3.</span> <span class="nav-text">类型描述符</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#方法描述符"><span class="nav-number">3.4.</span> <span class="nav-text">方法描述符</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#举个例子"><span class="nav-number">3.5.</span> <span class="nav-text">举个例子</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用ASM"><span class="nav-number">4.</span> <span class="nav-text">使用ASM</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#读取class字节码"><span class="nav-number">4.1.</span> <span class="nav-text">读取class字节码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#获取类的超类"><span class="nav-number">4.2.</span> <span class="nav-text">获取类的超类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#获取类的接口"><span class="nav-number">4.3.</span> <span class="nav-text">获取类的接口</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#获取类的成员变量"><span class="nav-number">4.4.</span> <span class="nav-text">获取类的成员变量</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#获取类的成员变量的修饰符"><span class="nav-number">4.4.1.</span> <span class="nav-text">获取类的成员变量的修饰符</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#获取类的成员方法"><span class="nav-number">4.5.</span> <span class="nav-text">获取类的成员方法</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#获取类的成员方法中的具体指令"><span class="nav-number">4.5.1.</span> <span class="nav-text">获取类的成员方法中的具体指令</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#举个例子-1"><span class="nav-number">4.6.</span> <span class="nav-text">举个例子</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用环境"><span class="nav-number">4.7.</span> <span class="nav-text">使用环境</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy;  2017 - 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">FaceHo</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.1"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+    
+    <script>
+      var cloudTieConfig = {
+        url: document.location.href, 
+        sourceId: "",
+        productKey: "4419bf822dca4a6ab0d1ed9b2127f410",
+        target: "cloud-tie-wrapper"
+      };
+    </script>
+    <script src="https://img1.ws.126.net/f2e/tie/yun/sdk/loader.js"></script>
+  
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
